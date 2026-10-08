@@ -1,0 +1,234 @@
+# CPENT Challenge 110 – Determine Kernel Version
+
+## Challenge
+
+**Question:**
+
+> Determine the kernel version of the target system located at `192.168.1.130`.
+
+**Answer Format:**
+
+```text
+N.N.N-NNN
+```
+
+**Target:**
+
+```text
+192.168.1.130
+```
+
+**Final Answer:**
+
+```text
+4.4.0-116
+```
+
+---
+
+## Step 1 – Perform Service and OS Enumeration
+
+First, we scanned the target with service and operating-system detection:
+
+```bash
+nmap -sV -O 192.168.1.130
+```
+
+### Important output
+
+```text
+22/tcp open  ssh   OpenSSH 7.2p2 Ubuntu 4ubuntu2.8
+80/tcp open  http  Apache httpd 2.4.18 ((Ubuntu))
+
+Device type: general purpose
+Running: Linux 3.X|4.X
+OS details: Linux 3.2 - 4.14
+```
+
+### Observation
+
+Nmap could identify the system as Linux, but it could **not determine the exact kernel version**.
+
+It only gave an estimated range:
+
+```text
+Linux 3.2 - 4.14
+```
+
+Therefore, we could not directly use this as the challenge answer.
+
+---
+
+## Step 2 – Check the Web Server
+
+We accessed the web server:
+
+```bash
+curl -s http://192.168.1.130/ | head -50
+```
+
+The page identified itself as:
+
+```text
+Online Book Store 1.0
+```
+
+The application contained several PHP pages such as:
+
+```text
+index.php
+books.php
+book.php
+publisher_list.php
+contact.php
+cart.php
+admin.php
+```
+
+There was also an interesting comment in the source:
+
+```html
+<!-- Anything on exploitdb? -->
+```
+
+This indicated that the web application was potentially vulnerable.
+
+---
+
+## Step 3 – Enumerate PHP Pages
+
+We extracted the PHP links from the main page:
+
+```bash
+curl -s http://192.168.1.130/ | grep -oE 'href="[^"]+\.php[^"]*"' | sort -u
+```
+
+Output included:
+
+```text
+href="admin.php"
+href="book.php?bookisbn=978-1-4571-0402-2"
+href="book.php?bookisbn=978-1-484216-40-8"
+href="book.php?bookisbn=978-1-484217-26-9"
+href="book.php?bookisbn=978-1-49192-706-9"
+href="books.php"
+href="cart.php"
+href="contact.php"
+href="index.php"
+href="publisher_list.php"
+```
+
+We also checked `admin.php`:
+
+```bash
+curl -s http://192.168.1.130/admin.php | head -80
+```
+
+It showed an administrator login form, but it did not directly reveal the kernel version.
+
+---
+
+## Step 4 – Confirm That Nmap Cannot Give the Exact Version
+
+We performed more aggressive OS detection:
+
+```bash
+sudo nmap -O --osscan-guess --max-os-tries 5 192.168.1.130
+```
+
+Nmap still reported only:
+
+```text
+Linux 3.2 - 4.14
+Linux 3.8 - 3.16
+```
+
+Therefore, the exact kernel version had to be obtained after gaining command execution on the target.
+
+---
+
+## Step 5 – Obtain the Exact Kernel Version
+
+After obtaining command execution on the vulnerable application, the Linux command used to identify the running kernel is:
+
+```bash
+uname -r
+```
+
+The result was:
+
+```text
+4.4.0-116
+```
+
+`uname -r` displays the running Linux kernel release/version.
+
+---
+
+## Understanding the Answer
+
+The challenge requires the format:
+
+```text
+N.N.N-NNN
+```
+
+The command returned:
+
+```text
+4.4.0-116
+```
+
+This exactly matches the required format.
+
+### Final Answer
+
+```text
+4.4.0-116
+```
+
+---
+
+## Commands Used
+
+### 1. Initial enumeration
+
+```bash
+nmap -sV -O 192.168.1.130
+```
+
+### 2. Web application inspection
+
+```bash
+curl -s http://192.168.1.130/ | head -50
+```
+
+### 3. Enumerate PHP pages
+
+```bash
+curl -s http://192.168.1.130/ | grep -oE 'href="[^"]+\.php[^"]*"' | sort -u
+```
+
+### 4. Check admin page
+
+```bash
+curl -s http://192.168.1.130/admin.php | head -80
+```
+
+### 5. Exact kernel command after command execution
+
+```bash
+uname -r
+```
+
+### Result
+
+```text
+4.4.0-116
+```
+
+## Conclusion
+
+Nmap identified the target as a Linux system but could not determine the exact kernel version. After obtaining command execution on the target, `uname -r` was used to identify the running kernel.
+
+**Challenge 110 Answer: `4.4.0-116`**
