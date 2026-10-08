@@ -1,0 +1,132 @@
+# CPENT Challenge 108 – Identify Rsync Shared Directory
+
+## Challenge
+
+**Question:**
+
+> Identify the shared directory accessible via the Rsync service running on the machine located at `192.168.1.136`.
+
+**Target:**
+
+```text
+192.168.1.136
+```
+
+**Answer Format:**
+
+```text
+Xxxxx
+```
+
+**Final Answer:**
+
+```text
+James
+```
+
+---
+
+## Step 1 – Identify the Rsync Service
+
+Rsync normally runs on TCP port **873**.
+
+We scanned port 873 and used the Rsync enumeration script:
+
+```bash
+nmap -p 873 --script rsync-list-modules 192.168.1.136
+```
+
+### Output
+
+```text
+PORT    STATE SERVICE
+873/tcp open  rsync
+```
+
+This confirmed that an **Rsync service** was running on the target.
+
+However, Nmap did not display the available Rsync module/share name.
+
+---
+
+## Step 2 – Enumerate Rsync Shares
+
+We queried the Rsync service directly:
+
+```bash
+rsync rsync://192.168.1.136/
+```
+
+### Output
+
+```text
+James           Entire james account backup
+```
+
+The first column is the **Rsync module/share name**.
+
+Therefore:
+
+```text
+James
+```
+
+is the shared directory/module accessible through Rsync.
+
+---
+
+## Step 3 – Match the Answer Format
+
+The challenge requires:
+
+```text
+Xxxxx
+```
+
+The discovered share is:
+
+```text
+James
+```
+
+It matches the required format.
+
+---
+
+## Commands Used
+
+### Check Rsync port
+
+```bash
+nmap -p 873 --script rsync-list-modules 192.168.1.136
+```
+
+### Enumerate Rsync shares
+
+```bash
+rsync rsync://192.168.1.136/
+```
+
+### Important Output
+
+```text
+James           Entire james account backup
+```
+
+---
+
+## Final Answer
+
+```text
+James
+```
+
+### Conclusion
+
+The target `192.168.1.136` was running Rsync on port `873`. Querying the Rsync service directly revealed the available module:
+
+```text
+James
+```
+
+**Challenge 108 → `James`**
