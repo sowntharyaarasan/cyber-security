@@ -1,0 +1,51 @@
+Challenge 116 — Identify the Git Service Port
+
+Question:
+Identify the port on which Git service is running on the machine 192.168.1.151.
+
+Answer Format: NNNN
+
+Step 1: Scan the target
+
+Use Nmap service detection:
+
+nmap -sV 192.168.1.151
+
+This scans the common ports and attempts to identify the services running on them.
+
+Step 2: Analyze the output
+
+The scan showed:
+
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3
+80/tcp   open  http    Apache httpd 2.4.29
+3000/tcp open  http    Golang net/http server
+
+The Git service was not directly identified by Nmap, so we inspect the response from port 3000.
+
+Step 3: Identify the Git service
+
+The Nmap service fingerprint contains:
+
+Set-Cookie: i_like_gitea=...
+
+The keyword gitea is the important clue.
+
+Gitea is a Git hosting service. Therefore, the HTTP service running on port 3000 is Gitea.
+
+We can also scan all TCP ports to make sure there isn't another Git service:
+
+nmap -p- -sV 192.168.1.151
+
+The result again shows:
+
+3000/tcp open http
+Step 4: Determine the answer
+
+Since Gitea/Git service is running on port 3000, the answer is:
+
+3000
+Final Answer
+
+Challenge 116 → 3000
