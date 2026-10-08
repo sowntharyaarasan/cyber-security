@@ -1,0 +1,89 @@
+# Challenge 101 – Retrieve userflag.txt
+
+### Question
+
+**Compromise `192.168.1.104` and enter the value of `userflag.txt`.**
+
+**Answer format:** `xxNxxxNNxx`
+
+### Step 1: SSH Login
+
+From Challenge 100, we obtained:
+
+```text
+Username: rebecca
+Password: qwerty123
+```
+
+Connect to the target:
+
+```bash
+ssh rebecca@192.168.1.104
+```
+
+After entering the password, we successfully obtained a shell as `rebecca`.
+
+### Step 2: Check Current Directory
+
+```bash
+pwd
+```
+
+Output:
+
+```text
+/home/rebecca
+```
+
+### Step 3: List Files
+
+```bash
+ls -la
+```
+
+The output showed:
+
+```text
+-rw-r--r-- 1 root root 11 Feb  5  2025 userflag.txt
+```
+
+The file `userflag.txt` was present in `/home/rebecca`.
+
+### Step 4: Read the Flag
+
+```bash
+cat userflag.txt
+```
+
+Output:
+
+```text
+jk3hfp86fg
+```
+
+### Final Answer
+
+```text
+jk3hfp86fg
+```
+
+### Method Summary
+
+```text
+Challenge 100
+      ↓
+Obtained SSH credentials
+rebecca : qwerty123
+      ↓
+SSH into 192.168.1.104
+      ↓
+pwd → /home/rebecca
+      ↓
+ls -la
+      ↓
+Found userflag.txt
+      ↓
+cat userflag.txt
+      ↓
+jk3hfp86fg
+```
