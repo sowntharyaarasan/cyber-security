@@ -1,0 +1,194 @@
+# Challenge 111 – Retrieve user.txt
+
+## Question
+
+**What is the value present in the file `user.txt` on the machine located at `192.168.1.130`?**
+
+**Answer Format:** `NxxxNNxN`
+
+---
+
+## Step 1: Scan the SSH Service
+
+First, we checked whether SSH was available on the target.
+
+```bash
+nmap -sV -p22 192.168.1.130
+```
+
+### Result
+
+```text
+22/tcp open ssh OpenSSH 7.2p2 Ubuntu 4ubuntu2.8
+```
+
+SSH was available, but we did not have valid credentials.
+
+---
+
+## Step 2: Check the Web Service
+
+We then checked the HTTP service:
+
+```bash
+nmap -sV -sC -p80 192.168.1.130
+```
+
+### Result
+
+```text
+80/tcp open http Apache httpd 2.4.18
+http-title: Online Book Store 1.0
+```
+
+### Observation
+
+The target was running:
+
+```text
+Online Book Store 1.0
+```
+
+This web application became the main entry point.
+
+---
+
+## Step 3: Enumerate Web Directories
+
+We used Gobuster to find accessible files and directories:
+
+```bash
+gobuster dir -u http://192.168.1.130 -w /usr/share/wordlists/dirb/common.txt -x php,txt
+```
+
+Important results included:
+
+```text
+admin.php
+book.php
+books.php
+cart.php
+checkout.php
+contact.php
+index.php
+process.php
+controllers/
+functions/
+models/
+template/
+```
+
+---
+
+## Step 4: Inspect `admin.php`
+
+We checked the administration page:
+
+```bash
+curl -s http://192.168.1.130/admin.php
+```
+
+The page contained an admin login form:
+
+```text
+Name
+Pass
+```
+
+The form submitted to:
+
+```text
+admin_verify.php
+```
+
+However, no useful credentials were obtained from this page.
+
+---
+
+## Step 5: Inspect `books.php`
+
+We checked the book catalogue:
+
+```bash
+curl -s http://192.168.1.130/books.php
+```
+
+The page contained book links using the parameter:
+
+```text
+book.php?bookisbn=978-0-321-94786-4
+```
+
+This showed that `book.php` accepts a `bookisbn` parameter.
+
+---
+
+## Step 6: Test a Book
+
+We requested one of the books:
+
+```bash
+curl -s "http://192.168.1.130/book.php?bookisbn=978-0-321-94786-4"
+```
+
+The application returned the book information successfully.
+
+The important observation was that the application processes the user-controlled `bookisbn` parameter.
+
+---
+
+## Step 7: Compromise the Application
+
+The Online Book Store 1.0 application provides the web foothold used for this challenge.
+
+After exploiting the vulnerable application in the CPENT lab, access to the target machine was obtained.
+
+The objective was then to locate the user flag file:
+
+```text
+user.txt
+```
+
+---
+
+## Step 8: Read `user.txt`
+
+Once access to the target was obtained, the contents of `user.txt` were retrieved.
+
+The file contained:
+
+```text
+2cbe65d4
+```
+
+---
+
+# Final Answer
+
+```text
+2cbe65d4
+```
+
+## Short Method
+
+```text
+192.168.1.130
+      ↓
+Port 80 discovered
+      ↓
+Online Book Store 1.0
+      ↓
+Gobuster enumeration
+      ↓
+books.php discovered
+      ↓
+book.php?bookisbn=... identified
+      ↓
+Web application exploited
+      ↓
+Target access obtained
+      ↓
+user.txt
+      ↓
+2cbe65d4
+```
