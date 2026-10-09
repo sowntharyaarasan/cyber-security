@@ -1,0 +1,84 @@
+CPENT Challenge 63 — Notes
+
+Question: What Nmap script argument should be specified before the domain to enumerate Kerberos users?
+
+Objective: Identify valid usernames in the LPT.COM Active Directory domain using Nmap.
+
+1. Command
+echo "administrator" > /tmp/test-user.txt
+sudo nmap -p 88 --script krb5-enum-users \
+--script-args krb5-enum-users.realm=LPT.COM,userdb=/tmp/test-user.txt \
+172.25.170.190
+2. Command explanation
+
+Parameter
+
+	
+
+Purpose
+
+
+
+
+-p 88
+
+	
+
+Scans the Kerberos port
+
+
+
+
+--script krb5-enum-users
+
+	
+
+Runs the Kerberos user enumeration script
+
+
+
+
+krb5-enum-users.realm=LPT.COM
+
+	
+
+Specifies the Kerberos realm
+
+
+
+
+userdb=/tmp/test-user.txt
+
+	
+
+Provides the username wordlist
+
+
+
+
+172.25.170.190
+
+	
+
+Target IP address
+
+3. Observed output
+PORT   STATE SERVICE
+88/tcp open  kerberos-sec
+
+Discovered Kerberos principals
+administrator@LPT.COM
+
+Result: The scan discovered administrator@LPT.COM as a valid Kerberos principal.
+
+4. Key takeaway for the exam
+
+Service: Kerberos
+
+Default port: 88
+
+Nmap script: krb5-enum-users
+
+Realm argument: krb5-enum-users.realm
+
+Discovered username: administrator
