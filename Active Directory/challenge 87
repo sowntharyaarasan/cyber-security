@@ -1,0 +1,60 @@
+# CPENT Challenge 87 – SMB Message Signing Status
+
+**Question:** What is the status of message signing on the machine at `172.25.170.170`?
+
+**Correct answer:** `Disabled`
+
+## 1. Objective
+
+Determine the SMB message-signing status of the target machine.
+
+## 2. Step 1 – Check SMB security mode
+
+**Command:**
+
+```bash
+nmap -Pn -p 445 --script smb-security-mode 172.25.170.170
+```
+
+**Important output:**
+
+```text
+smb-security-mode:
+  account_used: guest
+  authentication_level: user
+  challenge_response: supported
+  message_signing: disabled (dangerous, but default)
+```
+
+**Explanation:** The `smb-security-mode` script reports that message signing is disabled for the legacy SMB security mode.
+
+## 3. Step 2 – Check SMB2 security mode
+
+**Command:**
+
+```bash
+nmap -Pn -p 445 --script smb2-security-mode 172.25.170.170
+```
+
+**Output:**
+
+```text
+2.1:
+  Message signing enabled but not required
+```
+
+**Explanation:** SMB 2.1 reports that message signing is enabled but not mandatory. This is different from the legacy SMB security-mode result.
+
+## 4. Final answer
+
+| Item                      | Result                   |
+| ------------------------- | ------------------------ |
+| Target IP                 | `172.25.170.170`         |
+| Port                      | `445/tcp`                |
+| Legacy SMB signing status | Disabled                 |
+| SMB2 signing status       | Enabled but not required |
+| CPENT expected answer     | **Disabled**             |
+
+## 5. Exam tip
+
+Different Nmap scripts inspect different SMB protocol versions and security settings. Record which script produced each result. For this challenge, CPENT's accepted answer is **`Disabled`**, matching the output from `smb-security-mode`.
