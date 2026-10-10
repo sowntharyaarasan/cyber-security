@@ -1,0 +1,47 @@
+# CPENT Challenge 83 – SMB Message Signing Status
+
+**Question:** What is the status of message signing on the machine at `172.25.170.110`?
+
+**Answer expected by CPENT:** `Enabled`
+
+## 1. Objective
+
+Check the SMB message-signing security configuration on the target machine.
+
+## 2. First command
+
+```bash
+nmap -p 445 --script smb-security-mode 172.25.170.110
+```
+
+**Example output:**
+
+```text
+message_signing: disabled (dangerous, but default)
+```
+
+This script checks the older SMB security mode. Do not rely on this result alone if the challenge expects the SMB2/SMB3 message-signing status.
+
+## 3. Verification command
+
+```bash
+nmap -p 445 --script smb2-security-mode 172.25.170.110
+```
+
+Check the output for the SMB2/SMB3 message-signing configuration.
+
+* `Message signing enabled` — signing is enabled.
+* `Message signing required` — signing is required.
+* If signing is not enabled, the output will indicate that it is disabled or not required, depending on the reported configuration.
+
+## 4. Important distinction
+
+**Enabled** and **Required** are not always the same. Signing can be enabled without being mandatory.
+
+## 5. Exam note
+
+For this CPENT challenge, the expected answer is **Enabled**, according to the challenge feedback. Verify with `smb2-security-mode` to understand why it differs from the earlier SMB security-mode result.
+
+**Target IP:** `172.25.170.110`
+**Port:** `445/tcp`
+**Service:** SMB (Microsoft-DS)
