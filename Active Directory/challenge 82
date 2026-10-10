@@ -1,0 +1,68 @@
+# CPENT Challenge 82 — Identify Windows Server Version
+
+**Question:** What is the version of Windows Server running at IP address `172.25.170.110`? Provide only the year.
+
+**Target IP:** `172.25.170.110`
+
+**Objective:** Identify the Windows Server version and submit its release year.
+
+## Step 1: Perform OS and Service Detection
+
+Command:
+
+```bash
+sudo nmap -O -sV 172.25.170.110
+```
+
+**Purpose:**
+
+* `sudo` — runs Nmap with elevated privileges.
+* `-O` — attempts to identify the operating system.
+* `-sV` — detects service versions on open ports.
+
+**Important findings:**
+
+| Port | Service | Detection                   |
+| ---- | ------- | --------------------------- |
+| 135  | MSRPC   | Microsoft Windows RPC       |
+| 139  | NetBIOS | Microsoft NetBIOS           |
+| 445  | SMB     | Windows Server 2008 R2–2012 |
+| 3389 | RDP     | Microsoft Terminal Services |
+
+Nmap's strongest OS guess was **Windows Server 2012 R2 (97% confidence)**.
+
+## Step 2: Attempt SMB OS Discovery
+
+Command:
+
+```bash
+nmap -p 445 --script smb-os-discovery 172.25.170.110
+```
+
+**Purpose:** Attempts to retrieve operating-system and computer details through SMB.
+
+**Result:** No OS details were returned.
+
+## Step 3: Check SMB Protocols and Security
+
+Command:
+
+```bash
+nmap -p 445 --script smb-protocols,smb-security-mode 172.25.170.110
+```
+
+**Findings:**
+
+* SMBv1, SMB 2.0.2, SMB 2.1, SMB 3.0 and SMB 3.0.2 were supported.
+* Message signing was disabled.
+* This scan did not independently confirm the Windows Server version.
+
+## Final Answer
+
+**Best-supported candidate:** `2012`
+
+**Confidence note:** Nmap's OS detection was not definitive. The answer is based on its strongest OS guess, Windows Server 2012 R2; the other scans did not independently verify the exact version.
+
+## Key Learning
+
+Use `nmap -O -sV` first to identify the operating system and services. Use SMB discovery scripts as additional checks, but remember that filtered ports and limited responses can make OS detection uncertain.
