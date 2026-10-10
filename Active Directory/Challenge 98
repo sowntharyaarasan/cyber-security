@@ -1,0 +1,61 @@
+# CPENT Challenge 98 – SMB2 Message Signing Requirement
+
+**Question:** On the machine `172.25.170.80`, is SMB2 message signing required or not required?
+
+**Correct answer:** `Required`
+
+## 1. Objective
+
+Determine whether SMB2 message signing is mandatory on the target machine.
+
+## 2. Command
+
+Run this command in Kali Linux:
+
+```bash
+nmap -Pn -p 445 --script smb2-security-mode 172.25.170.80
+```
+
+### Command explanation
+
+* `nmap` — network scanning tool.
+* `-Pn` — skips host discovery and scans the target directly.
+* `-p 445` — scans port 445, used by SMB.
+* `--script smb2-security-mode` — checks SMB2 message-signing settings.
+* `172.25.170.80` — target IP address.
+
+## 3. Important output
+
+```text
+Host script results:
+| smb2-security-mode:
+|   3.0.2:
+|_    Message signing enabled and required
+```
+
+## 4. Explanation
+
+* **SMB dialect:** `3.0.2`
+* **Message signing enabled:** SMB message signing is active.
+* **Message signing required:** The server mandates signing for SMB2 connections.
+
+Since the output explicitly says **“enabled and required,”** the answer is `Required`.
+
+## 5. Final answer
+
+| Item                  | Result               |
+| --------------------- | -------------------- |
+| Target IP             | `172.25.170.80`      |
+| Port                  | `445/tcp`            |
+| SMB dialect           | `3.0.2`              |
+| Signing configuration | Enabled and required |
+| Challenge answer      | **Required**         |
+
+## 6. Exam tip
+
+Remember this distinction:
+
+* `Message signing enabled and required` → **Required**
+* `Message signing enabled but not required` → **Not Required**
+
+Always read the complete message-signing line before submitting your answer.
