@@ -1,0 +1,99 @@
+# CPENT Challenge 86 – Windows Server Version Detection
+
+**Question:** What is the version of Windows Server running at IP address `172.25.170.170`? Provide only the year.
+
+**Likely answer:** `2008`
+
+## 1. Objective
+
+Identify the Windows Server version running on the target machine using network scanning and service fingerprinting.
+
+## 2. Step 1 – OS and service detection
+
+**Command:**
+
+```bash
+sudo nmap -Pn -O -sV 172.25.170.170
+```
+
+**Important output:**
+
+```text
+445/tcp open microsoft-ds Microsoft Windows Server 2008 R2 - 2012
+Aggressive OS guesses:
+Microsoft Windows 7 or Windows Server 2008 R2 (92%)
+Microsoft Windows Server 2012 R2 (85%)
+```
+
+**Explanation:**
+
+* `-Pn` skips host discovery and scans the target directly.
+* `-O` attempts operating-system detection.
+* `-sV` identifies service versions.
+* The scan narrowed down the likely OS but did not confirm the exact year.
+
+## 3. Step 2 – SMB OS discovery
+
+**Command:**
+
+```bash
+nmap -Pn -p 445 --script smb-os-discovery 172.25.170.170
+```
+
+**Result:** The port was open, but no OS details were returned.
+
+**Explanation:** SMB OS discovery did not provide enough information to identify the exact server version.
+
+## 4. Step 3 – SMB protocol detection
+
+**Command:**
+
+```bash
+nmap -Pn -p 445 --script smb-protocols,smb2-security-mode 172.25.170.170
+```
+
+**Important output:**
+
+```text
+dialects:
+  NT LM 0.12 (SMBv1)
+  2.0.2
+  2.1
+```
+
+**Explanation:** The target supports SMBv1, SMB 2.0.2, and SMB 2.1. These protocols alone do not confirm the Windows Server year.
+
+## 5. Step 4 – RDP certificate inspection
+
+**Command:**
+
+```bash
+sudo nmap -Pn -p 3389 --script ssl-cert 172.25.170.170
+```
+
+**Important output:**
+
+```text
+3389/tcp open ms-wbt-server
+Subject: commonName=SERVER2008.CPENT.LOCALNET
+Issuer: commonName=SERVER2008.CPENT.LOCALNET
+```
+
+**Explanation:**
+
+* Port `3389` is used by Remote Desktop Protocol (RDP).
+* The certificate's common name is `SERVER2008.CPENT.LOCALNET`.
+* The name supports the hypothesis that this is the SERVER2008 machine.
+* A certificate name is a clue, not definitive proof of the installed OS version.
+
+## 6. Final revision
+
+| Item                    | Result                      |
+| ----------------------- | --------------------------- |
+| Target IP               | `172.25.170.170`            |
+| SMB port                | `445/tcp`                   |
+| RDP port                | `3389/tcp`                  |
+| Certificate common name | `SERVER2008.CPENT.LOCALNET` |
+| Likely answer           | `2008`                      |
+
+**Exam tip:** When Nmap cannot identify an exact OS version, compare its OS guesses with other evidence, such as service banners and RDP certificate names. Submit only the requested year in the answer field.
