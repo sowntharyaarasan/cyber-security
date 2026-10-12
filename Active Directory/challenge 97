@@ -1,0 +1,15 @@
+Challenge 97: Identify the Domain Name
+
+Question: What is the domain name for the machine located at 172.25.170.80, including the suffix?
+
+Answer: ECC.LOCALNET
+
+Commands used
+nmap -Pn -sV -sC -p- --min-rate 1000 172.25.170.80
+ldapsearch -x -H ldap://172.25.170.80 -b "" -s base "(objectClass=*)" defaultNamingContext rootDomainNamingContext dnsHostName
+Important output
+defaultNamingContext: DC=ECC,DC=LOCALNET
+rootDomainNamingContext: DC=ECC,DC=LOCALNET
+dnsHostName: 2012-DC.ECC.LOCALNET
+
+Conclusion: The domain name is ECC.LOCALNET. The machine's hostname is 2012-DC.ECC.LOCALNET.
